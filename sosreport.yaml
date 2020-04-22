@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: openshift4-sosreport
+message: A new sosreport job has been created in the "openshift" project.
+metadata:
+  annotations:
+    tags: sosreport
+    version: 0.0.1
+  name: openshift4-sosreport
+objects:
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sosreport
+  namespace: openshift
+spec:
+  template:
+    spec:
+      containers:
+      - name: sosreport
+        image: registry.redhat.io/rhel8/support-tools
+        command:
+          - chroot
+          - /host
+          - toolbox
+          - chroot
+          - /host
+          - sosreport
+          - -o
+          - lvm2
+          - --batch
+          - --case-id
+          - ${CASE_NUMBER}
+        stdin: true
+        stdinOnce: true
+        tty: true
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host
+          name: host
+      restartPolicy: Never
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/hostname: ${NODE_NAME}
+      tolerations:
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /
+          type: ""
+        name: host
+  backoffLimit: 4
+parameters:
+- description: The node name to run sosreport on.
+  displayName: Node name
+  name: NODE_NAME
+  required: true
+- description: The Red Hat support case number sosreport is for.
+  displayName: Red Hat support case number.
+  name: CASE_NUMBER
+  required: false
+  from: '00000000'
+  generate: expression

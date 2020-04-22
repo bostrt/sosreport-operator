@@ -1,0 +1,43 @@
+# Create in default namespace
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sosreport
+spec:
+  template:
+    spec:
+      containers:
+      - name: sosreport
+        image: registry.redhat.io/rhel8/support-tools
+        command:
+          - chroot
+          - /host
+          - toolbox
+          - chroot
+          - /host
+          - sosreport
+          - -o
+          - lvm2
+          - --batch
+        stdin: true
+        stdinOnce: true
+        tty: true
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host
+          name: host
+      restartPolicy: Never
+      serviceAccountName: "sosreport-worker"
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/hostname: "ip-10-0-136-149"
+      tolerations:
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /
+          type: ""
+        name: host
+  backoffLimit: 4

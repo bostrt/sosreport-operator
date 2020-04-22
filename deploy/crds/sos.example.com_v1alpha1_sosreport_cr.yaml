@@ -1,0 +1,7 @@
+apiVersion: sos.example.com/v1alpha1
+kind: Sosreport
+metadata:
+  name: example-sosreport
+spec:
+  # Add fields here
+  size: 3
